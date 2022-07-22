@@ -1,3 +1,4 @@
+from distutils.command.upload import upload
 import streamlit as st
 import mediapipe as mp
 import cv2
@@ -12,7 +13,7 @@ mp_face_mesh = mp.solutions.face_mesh
 DEMO_VIDEO = "demo.mp4"
 DEMO_IMAGE = "demo.jpg"
 
-st.title("MediaPipe Face Mesh Application")
+st.title("Face Detector")
 
 st.markdown(
     """
@@ -29,7 +30,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.sidebar.title("MediaPipe Face Mesh Application")
+st.sidebar.title("Face Detector")
 st.sidebar.subheader("Parameters")
 
 
@@ -67,13 +68,12 @@ def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 
 app_mode = st.sidebar.selectbox(
-    "Choose the App mode", ["About App", "Run on Image", "Run on Video"]
+    "Choose the App mode",
+    ["About App", "Run on Image", "Run on Video", "Colored To B&W"],
 )
 
 if app_mode == "About App":
-    st.markdown(
-        "In this application we are using **MediaPipe** for creating a Face Mesh. **StreamLit** is to create the Web Graphical User Interface (GUI) "
-    )
+    st.markdown("GUI app to detect face(s) in images/videos")
     st.markdown(
         """
     <style>
@@ -88,26 +88,8 @@ if app_mode == "About App":
     """,
         unsafe_allow_html=True,
     )
-    st.image("demo.jpg")
+    st.image("demo1.jpg")
 
-    # st.markdown(
-    #     """
-    #       # About Me \n
-    #         Hey this is ** Ritesh Kanjee ** from **Augmented Startups**. \n
-
-    #         If you are interested in building more Computer Vision apps like this one then visit the **Vision Store** at
-    #         www.augmentedstartups.info/visionstore \n
-
-    #         Also check us out on Social Media
-    #         - [YouTube](https://augmentedstartups.info/YouTube)
-    #         - [LinkedIn](https://augmentedstartups.info/LinkedIn)
-    #         - [Facebook](https://augmentedstartups.info/Facebook)
-    #         - [Discord](https://augmentedstartups.info/Discord)
-
-    #         If you are feeling generous you can buy me a **cup of  coffee ** from [HERE](https://augmentedstartups.info/ByMeACoffee)
-
-    #         """
-    # )
 elif app_mode == "Run on Video":
 
     st.set_option("deprecation.showfileUploaderEncoding", False)
@@ -146,6 +128,22 @@ elif app_mode == "Run on Video":
 
     st.markdown(" ## Output")
 
+    kpi1, kpi2, kpi3 = st.columns(3)
+
+    with kpi1:
+        st.markdown("**FrameRate**")
+        kpi1_text = st.markdown("0")
+
+    with kpi2:
+        st.markdown("**Detected Faces**")
+        kpi2_text = st.markdown("0")
+
+    with kpi3:
+        st.markdown("**Image Width**")
+        kpi3_text = st.markdown("0")
+
+    st.markdown("<hr/>", unsafe_allow_html=True)
+
     stframe = st.empty()
     video_file_buffer = st.sidebar.file_uploader(
         "Upload a video", type=["mp4", "mov", "avi", "asf", "m4v"]
@@ -176,22 +174,6 @@ elif app_mode == "Run on Video":
     fps = 0
     i = 0
     drawing_spec = mp_drawing.DrawingSpec(thickness=2, circle_radius=2)
-
-    kpi1, kpi2, kpi3 = st.columns(3)
-
-    with kpi1:
-        st.markdown("**FrameRate**")
-        kpi1_text = st.markdown("0")
-
-    with kpi2:
-        st.markdown("**Detected Faces**")
-        kpi2_text = st.markdown("0")
-
-    with kpi3:
-        st.markdown("**Image Width**")
-        kpi3_text = st.markdown("0")
-
-    st.markdown("<hr/>", unsafe_allow_html=True)
 
     with mp_face_mesh.FaceMesh(
         min_detection_confidence=detection_confidence,
@@ -329,3 +311,20 @@ elif app_mode == "Run on Image":
             )
         st.subheader("Output Image")
         st.image(out_image, use_column_width=True)
+
+elif app_mode == "Colored To B&W":
+
+    uploaded = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    gray = cv2.cvtColor(uploaded, cv2.COLOR_BGR2GRAY)
+    gray = Image.fromarray(gray)
+
+    if uploaded is not None:
+        image = np.array(Image.open(uploaded))
+
+    else:
+        demo_image = DEMO_IMAGE
+        image = np.array(Image.open(demo_image))
+
+    st.sidebar.text("Original Image")
+    st.sidebar.image(image)
+
